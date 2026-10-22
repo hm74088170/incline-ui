@@ -1,14 +1,16 @@
+import { config } from "dotenv";
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
+
+config({ path: ".env.test" });
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [react()],
+  resolve: { tsconfigPaths: true },
   test: {
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/db/migrations/**", "**/*.d.ts"],
     },
     projects: [
       {
