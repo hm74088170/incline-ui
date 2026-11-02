@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, boolean, index } from "drizzle-orm/pg-core";
 import { categories } from "./categories";
 import { timestamps } from "./_helpers";
 
@@ -17,6 +17,16 @@ export const icons = pgTable(
     publicId: text("public_id").notNull().unique(),
 
     format: text("format").notNull().default("svg"),
+
+    // delivery: CLI isi SVG ko user ke project me component bana kar likhega
+    svg: text("svg").notNull(),
+
+    // paid icons: true hone par svg sirf subscribed user ko milega
+    isPremium: boolean("is_premium").notNull().default(false),
+
+    // search ke liye
+    tags: text("tags").array().notNull().default([]),
+    
     sizeBytes: integer("size_bytes"),
     ...timestamps,
   },
