@@ -21,14 +21,21 @@ const category = {
 };
 
 const ctx = (value: string) => ({ params: Promise.resolve({ id: value }) });
-const req = (method: string, body?: unknown) =>
+const req = (method: string, body?: unknown, authorization: string | null = "Bearer test-key") =>
   new Request(`http://localhost/api/categories/${id}`, {
     method,
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...(authorization ? { authorization } : {}),
+    },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-beforeEach(() => vi.resetAllMocks());
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.stubEnv("ADMIN_API_KEY", "test-key");
+});
+afterEach(() => vi.unstubAllEnvs());
 
 describe("GET /api/categories/[id]", () => {
   it("returns the category", async () => {
@@ -78,5 +85,25 @@ describe("DELETE /api/categories/[id]", () => {
     vi.mocked(deleteCategory).mockRejectedValue(new ConflictError("Category still has icons"));
     const res = await DELETE(req("DELETE"), ctx(id));
     expect(res.status).toBe(409);
+  });
+});
+
+describe("admin protection", () => {
+  it("GET stays public", async () => {
+    vi.mocked(getCategory).mockResolvedValue(category);
+    const res = await GET(req("GET", undefined, null), ctx(id));
+    expect(res.status).toBe(200);
+  });
+
+  it("PATCH returns 401 without the admin key", async () => {
+    const res = await PATCH(req("PATCH", { description: "x" }, null), ctx(id));
+    expect(res.status).toBe(401);
+    expect(updateCategory).not.toHaveBeenCalled();
+  });
+
+  it("DELETE returns 401 without the admin key", async () => {
+    const res = await DELETE(req("DELETE", undefined, null), ctx(id));
+    expect(res.status).toBe(401);
+    expect(deleteCategory).not.toHaveBeenCalled();
   });
 });

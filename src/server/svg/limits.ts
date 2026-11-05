@@ -1,0 +1,1 @@
+export const MAX_SVG_BYTES = 100 * 1024; // 100 KB

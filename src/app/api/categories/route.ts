@@ -1,6 +1,7 @@
 import { errorResponse, readJson } from "@/lib/http";
 import { createCategory, listCategories } from "@/server/services/category.service";
 import { createCategorySchema } from "@/server/validators/category";
+import { requireAdmin } from "@/server/auth/admin";
 
 export async function GET() {
   try {
@@ -12,6 +13,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    requireAdmin(req);
     const input = createCategorySchema.parse(await readJson(req));
     const category = await createCategory(input);
     return Response.json({ data: category }, { status: 201 });

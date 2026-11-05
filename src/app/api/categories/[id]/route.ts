@@ -6,6 +6,7 @@ import {
 } from "@/server/services/category.service";
 import { updateCategorySchema } from "@/server/validators/category";
 import { idSchema } from "@/server/validators/common";
+import { requireAdmin } from "@/server/auth/admin";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -20,6 +21,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
 export async function PATCH(req: Request, { params }: Ctx) {
   try {
+    requireAdmin(req);
     const id = idSchema.parse((await params).id);
     const input = updateCategorySchema.parse(await readJson(req));
     return Response.json({ data: await updateCategory(id, input) });
@@ -28,8 +30,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
 }
 
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(req: Request, { params }: Ctx) {
   try {
+    requireAdmin(req);
     const id = idSchema.parse((await params).id);
     await deleteCategory(id);
     return new Response(null, { status: 204 });

@@ -19,14 +19,22 @@ const category = {
   updatedAt: new Date(),
 };
 
-const post = (body: unknown) =>
+const post = (body: unknown, authorization: string | null = "Bearer test-key") =>
   new Request("http://localhost/api/categories", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...(authorization ? { authorization } : {}),
+    },
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
 
-beforeEach(() => vi.resetAllMocks());
+
+beforeEach(() => {
+  vi.resetAllMocks();
+  vi.stubEnv("ADMIN_API_KEY", "test-key");
+});
+afterEach(() => vi.unstubAllEnvs());
 
 describe("GET /api/categories", () => {
   it("returns the list with 200", async () => {
@@ -65,5 +73,11 @@ describe("POST /api/categories", () => {
     const res = await POST(post({ name: "Arrows" }));
     expect(res.status).toBe(409);
     expect((await res.json()).error.code).toBe("CONFLICT");
+  });
+
+    it("returns 401 without the admin key and does not call the service", async () => {
+    const res = await POST(post({ name: "Arrows" }, null));
+    expect(res.status).toBe(401);
+    expect(createCategory).not.toHaveBeenCalled();
   });
 });

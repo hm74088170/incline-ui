@@ -1,7 +1,7 @@
 import DOMPurify from "isomorphic-dompurify";
 import { ValidationError } from "@/lib/errors";
 
-export const MAX_SVG_BYTES = 100 * 1024; // 100 KB
+import { MAX_SVG_BYTES } from "./limits";
 
 const looksLikeSvg = (s: string) => /<svg[\s>]/i.test(s);
 
@@ -25,3 +25,5 @@ export function sanitizeSvg(input: string): string {
   }
   return clean;
 }
+
+export { MAX_SVG_BYTES };
