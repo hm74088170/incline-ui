@@ -5,6 +5,7 @@ import type { IconsQuery } from "@/lib/api/types";
 export const iconKeys = {
   all: ["icons"] as const,
   list: (params: IconsQuery) => ["icons", "list", params] as const,
+  infinite: (params: Omit<IconsQuery, "page">) => ["icons", "infinite", params] as const,
 };
 
 export function useIcons(params: IconsQuery = {}) {
