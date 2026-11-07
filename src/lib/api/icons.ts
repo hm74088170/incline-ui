@@ -1,5 +1,6 @@
 import { apiFetch } from "./client";
-import type { IconsQuery, ListIconsResponse } from "./types";
+import type { IconDetail, IconsQuery, ListIconsResponse } from "./types";
+
 
 export function buildIconsQuery(params: IconsQuery = {}): string {
   const search = new URLSearchParams();
@@ -13,4 +14,8 @@ export function buildIconsQuery(params: IconsQuery = {}): string {
 
 export function fetchIcons(params: IconsQuery = {}): Promise<ListIconsResponse> {
   return apiFetch<ListIconsResponse>(`/api/icons${buildIconsQuery(params)}`);
+}
+
+export function fetchIcon(slug: string): Promise<{ data: IconDetail }> {
+  return apiFetch<{ data: IconDetail }>(`/api/icons/${encodeURIComponent(slug)}`);
 }

@@ -6,6 +6,7 @@ export const iconKeys = {
   all: ["icons"] as const,
   list: (params: IconsQuery) => ["icons", "list", params] as const,
   infinite: (params: Omit<IconsQuery, "page">) => ["icons", "infinite", params] as const,
+  detail: (slug: string) => ["icons", "detail", slug] as const,
 };
 
 export function useIcons(params: IconsQuery = {}) {

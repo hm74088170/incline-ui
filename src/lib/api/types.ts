@@ -35,3 +35,29 @@ export type ListIconsResponse = {
 };
 
 export type CategoriesResponse = { data: Category[] };
+
+export type IconDetail = {
+  id: string;
+  name: string;
+  slug: string;
+  url: string;
+  svg: string | null; // premium icons ke liye null
+  format: string;
+  sizeBytes: number | null;
+  tags: string[];
+  isPremium: boolean;
+  createdAt: string;
+  updatedAt: string;
+  category: Category;
+};
+
+export type RegistryItem = {
+  name: string;
+  title: string;
+  type: "registry:icon";
+  category: string;
+  tags: string[];
+  componentName: string;
+  dependencies: string[];
+  files: { path: string; content: string }[];
+};

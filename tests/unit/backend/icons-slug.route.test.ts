@@ -23,11 +23,32 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllEnvs());
 
 describe("GET /api/icons/[slug]", () => {
-  it("returns the icon without needing a key", async () => {
-    vi.mocked(getIcon).mockResolvedValue({ slug: "arrow-left", svg: "<svg/>" } as never);
+   it("returns the icon without needing a key", async () => {
+    vi.mocked(getIcon).mockResolvedValue({
+      slug: "arrow-left",
+      svg: "<svg/>",
+      publicId: "inclineui/icons/arrow-left",
+      isPremium: false,
+    } as never);
     const res = await GET(req("GET"), ctx("arrow-left"));
     expect(res.status).toBe(200);
-    expect((await res.json()).data.slug).toBe("arrow-left");
+    const { data } = await res.json();
+    expect(data.slug).toBe("arrow-left");
+    expect(data.svg).toBe("<svg/>");
+    expect(data).not.toHaveProperty("publicId");
+  });
+
+   it("does not send the svg of a premium icon", async () => {
+    vi.mocked(getIcon).mockResolvedValue({
+      slug: "crown",
+      svg: "<svg>secret</svg>",
+      publicId: "p",
+      isPremium: true,
+    } as never);
+    const res = await GET(req("GET"), ctx("crown"));
+    const body = await res.json();
+    expect(body.data.svg).toBeNull();
+    expect(JSON.stringify(body)).not.toContain("secret");
   });
 
   it("returns 404 when the icon does not exist", async () => {
