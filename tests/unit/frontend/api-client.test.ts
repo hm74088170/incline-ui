@@ -31,7 +31,7 @@ describe("apiFetch", () => {
     );
     const err = await apiFetch("/api/x").catch((e) => e);
     expect(err).toBeInstanceOf(ApiError);
-    expect(err.status).toBe(502);
+        expect(err).toMatchObject({ status: 502 });
   });
 
   it("returns undefined for 204 No Content", async () => {

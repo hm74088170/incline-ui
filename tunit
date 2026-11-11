@@ -1,0 +1,176 @@
+[33mcommit 7f4338e5356f3bbb9054e06879003858bbdf1e6e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeat/frontend-browse[m[33m, [m[1;31morigin/feat/frontend-browse[m[33m)[m
+Author: Himanshu Mishra <hm74088170@gmail.com>
+Date:   Sun Nov 8 01:17:35 2026 +0530
+
+    feat: add icon detail page with preview controls and copyable code; hide premium svg
+
+[1mdiff --git a/src/app/(browse)/icons/[slug]/page.tsx b/src/app/(browse)/icons/[slug]/page.tsx[m
+[1mindex 3d2dd9b..f60b8c6 100644[m
+[1m--- a/src/app/(browse)/icons/[slug]/page.tsx[m
+[1m+++ b/src/app/(browse)/icons/[slug]/page.tsx[m
+[36m@@ -1,9 +1,6 @@[m
+[32m+[m[32mimport { IconDetail } from "@/components/browse/icon-detail";[m
+[32m+[m
+ export default async function IconPage({ params }: { params: Promise<{ slug: string }> }) {[m
+   const { slug } = await params;[m
+[31m-  return ([m
+[31m-    <div className="p-8">[m
+[31m-      <h1 className="text-2xl font-semibold">{slug}</h1>[m
+[31m-      <p className="mt-2 text-subtle">Icon details are coming in the next step.</p>[m
+[31m-    </div>[m
+[31m-  );[m
+[32m+[m[32m  return <IconDetail slug={slug} />;[m
+ }[m
+\ No newline at end of file[m
+[1mdiff --git a/src/app/api/icons/[slug]/route.ts b/src/app/api/icons/[slug]/route.ts[m
+[1mindex 2dc4002..4a2b921 100644[m
+[1m--- a/src/app/api/icons/[slug]/route.ts[m
+[1m+++ b/src/app/api/icons/[slug]/route.ts[m
+[36m@@ -2,13 +2,14 @@[m [mimport { errorResponse } from "@/lib/http";[m
+ import { requireAdmin } from "@/server/auth/admin";[m
+ import { deleteIcon, getIcon } from "@/server/services/icon.service";[m
+ import { slugSchema } from "@/server/validators/common";[m
+[32m+[m[32mimport { toPublicIcon } from "@/server/services/public-icon";[m
+ [m
+ type Ctx = { params: Promise<{ slug: string }> };[m
+ [m
+ export async function GET(_req: Request, { params }: Ctx) {[m
+   try {[m
+     const slug = slugSchema.parse((await params).slug);[m
+[31m-    return Response.json({ data: await getIcon(slug) });[m
+[32m+[m[32m    return Response.json({ data: toPublicIcon(await getIcon(slug)) });[m
+   } catch (err) {[m
+     return errorResponse(err);[m
+   }[m
+[1mdiff --git a/src/app/providers.tsx b/src/app/providers.tsx[m
+[1mindex d0f9d20..20f864e 100644[m
+[1m--- a/src/app/providers.tsx[m
+[1m+++ b/src/app/providers.tsx[m
+[36m@@ -2,6 +2,8 @@[m
+ [m
+ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";[m
+ import { useState, type ReactNode } from "react";[m
+[32m+[m[32mimport { shouldRetry } from "@/lib/api/retry";[m
+[32m+[m
+ [m
+ export function Providers({ children }: { children: ReactNode }) {[m
+   // useState ke andar banao, taaki har render par naya client na bane[m
+[36m@@ -9,7 +11,7 @@[m [mexport function Providers({ children }: { children: ReactNode }) {[m
+     () =>[m
+       new QueryClient({[m
+         defaultOptions: {[m
+[31m-          queries: { staleTime: 60_000, refetchOnWindowFocus: false },[m
+[32m+[m[32m          queries: { staleTime: 60_000, refetchOnWindowFocus: false, retry: shouldRetry },[m
+         },[m
+       }),[m
+   );[m
+[1mdiff --git a/src/components/browse/code-block.tsx b/src/components/browse/code-block.tsx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..d91fdcc[m
+[1m--- /dev/null[m
+[1m+++ b/src/components/browse/code-block.tsx[m
+[36m@@ -0,0 +1,15 @@[m
+[32m+[m[32mimport { CopyButton } from "./copy-button";[m
+[32m+[m
+[32m+[m[32mexport function CodeBlock({ code, title }: { code: string; title: string }) {[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <div className="overflow-hidden rounded-xl border border-line bg-surface">[m
+[32m+[m[32m      <div className="flex items-center justify-between gap-3 border-b border-line px-3 py-2">[m
+[32m+[m[32m        <span className="truncate font-mono text-xs text-subtle">{title}</span>[m
+[32m+[m[32m        <CopyButton text={code} label="Copy code" />[m
+[32m+[m[32m      </div>[m
+[32m+[m[32m      <pre tabIndex={0} className="max-h-96 overflow-auto p-4 text-xs leading-relaxed">[m
+[32m+[m[32m        <code className="font-mono">{code}</code>[m
+[32m+[m[32m      </pre>[m
+[32m+[m[32m    </div>[m
+[32m+[m[32m  );[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/src/components/browse/copy-button.tsx b/src/components/browse/copy-button.tsx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..91a1796[m
+[1m--- /dev/null[m
+[1m+++ b/src/components/browse/copy-button.tsx[m
+[36m@@ -0,0 +1,49 @@[m
+[32m+[m[32m"use client";[m
+[32m+[m
+[32m+[m[32mimport { Check, Copy } from "lucide-react";[m
+[32m+[m[32mimport { useEffect, useRef, useState } from "react";[m
+[32m+[m
+[32m+[m[32mtype Props = {[m
+[32m+[m[32m  text: string;[m
+[32m+[m[32m  label?: string;[m
+[32m+[m[32m  copiedLabel?: string;[m
+[32m+[m[32m  resetAfterMs?: number;[m
+[32m+[m[32m};[m
+[32m+[m
+[32m+[m[32mexport function CopyButton({[m
+[32m+[m[32m  text,[m
+[32m+[m[32m  label = "Copy",[m
+[32m+[m[32m  copiedLabel = "Copied",[m
+[32m+[m[32m  resetAfterMs = 2000,[m
+[32m+[m[32m}: Props) {[m
+[32m+[m[32m  const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");[m
+[32m+[m[32m  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);[m
+[32m+[m
+[32m+[m[32m  useEffect(() => () => clearTimeout(timer.current), []);[m
+[32m+[m
+[32m+[m[32m  async function copy() {[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      await navigator.clipboard.writeText(text);[m
+[32m+[m[32m      setStatus("copied");[m
+[32m+[m[32m    } catch {[m
+[32m+[m[32m      setStatus("failed");[m
+[32m+[m[32m    }[m
+[32m+[m[32m    clearTimeout(timer.current);[m
+[32m+[m[32m    timer.current = setTimeout(() => setStatus("idle"), resetAfterMs);[m
+[32m+[m[32m  }[m
+[32m+[m
+[32m+[m[32m  const Icon = status === "copied" ? Check : Copy;[m
+[32m+[m[32m  const text_ =[m
+[32m+[m[32m    status === "copied" ? copiedLabel : status === "failed" ? "Couldn't copy" : label;[m
+[32m+[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <button[m
+[32m+[m[32m      type="button"[m
+[32m+[m[32m      onClick={copy}[m
+[32m+[m[32m      className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-xs text-subtle transition-colors hover:bg-hover hover:text-ink"[m
+[32m+[m[32m    >[m
+[32m+[m[32m      <Icon aria-hidden className="size-3.5" />[m
+[32m+[m[32m      <span aria-live="polite">{text_}</span>[m
+[32m+[m[32m    </button>[m
+[32m+[m[32m  );[m
+[32m+[m[32m}[m
+\ No newline at end of file[m
+[1mdiff --git a/src/components/browse/icon-detail.tsx b/src/components/browse/icon-detail.tsx[m
+[1mnew file mode 100644[m
+[1mindex 0000000..020963a[m
+[1m--- /dev/null[m
+[1m+++ b/src/components/browse/icon-detail.tsx[m
+[36m@@ -0,0 +1,168 @@[m
+[32m+[m[32m"use client";[m
+[32m+[m
+[32m+[m[32mimport Link from "next/link";[m
+[32m+[m[32mimport { useState } from "react";[m
+[32m+[m[32mimport { useIcon } from "@/hooks/use-icon";[m
+[32m+[m[32mimport { useRegistryIcon } from "@/hooks/use-registry-icon";[m
+[32m+[m[32mimport { ApiError } from "@/lib/api/client";[m
+[32m+[m[32mimport { CodeBlock } from "./code-block";[m
+[32m+[m[32mimport { CopyButton } from "./copy-button";[m
+[32m+[m[32mimport { PreviewControls } from "./preview-controls";[m
+[32m+[m[32mimport { SvgPreview } from "./svg-preview";[m
+[32m+[m
+[32m+[m[32mtype CodeTab = "react" | "svg";[m
+[32m+[m
+[32m+[m[32mconst tabClass = (active: boolean) =>[m
+[32m+[m[32m  `rounded-md px-3 py-1.5 text-sm transition-colors ${[m
+[32m+[m[32m    active ? "bg-hover font-medium text-ink" : "text-subtle hover:text-ink"[m
+[32m+[m[32m  }`;[m
+[32m+[m
+[32m+[m[32mexport function IconDetail({ slug }: { slug: string }) {[m
+[32m+[m[32m  const icon = useIcon(slug);[m
+[32m+[m[32m  const [size, setSize] = useState(64);[m
+[32m+[m[32m  const [color, setColor] = useState<string | undefined>();[m
+[32m+[m[32m  const [tab, setTab] = useState<CodeTab>("react");[m
+[32m+[m
+[32m+[m[32m  const premium = icon.data?.d

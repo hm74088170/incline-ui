@@ -22,7 +22,9 @@ describe("buildIconsQuery", () => {
 describe("fetchIcons", () => {
   it("calls /api/icons with the query string", async () => {
     const payload = { data: [], meta: { total: 0, page: 1, limit: 48 } };
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify(payload), { status: 200 }));
+        const fetchMock = vi.fn<typeof fetch>(
+      async () => new Response(JSON.stringify(payload), { status: 200 }),
+    );
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await fetchIcons({ category: "arrows" });

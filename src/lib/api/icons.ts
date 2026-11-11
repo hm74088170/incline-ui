@@ -19,3 +19,7 @@ export function fetchIcons(params: IconsQuery = {}): Promise<ListIconsResponse> 
 export function fetchIcon(slug: string): Promise<{ data: IconDetail }> {
   return apiFetch<{ data: IconDetail }>(`/api/icons/${encodeURIComponent(slug)}`);
 }
+
+export function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Something went wrong";
+}

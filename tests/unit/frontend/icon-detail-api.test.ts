@@ -4,7 +4,9 @@ import { fetchRegistryIcon } from "@/lib/api/registry";
 afterEach(() => vi.unstubAllGlobals());
 
 const stub = () => {
-  const fetchMock = vi.fn(async () => new Response(JSON.stringify({ data: {} }), { status: 200 }));
+  const fetchMock = vi.fn<typeof fetch>(
+    async () => new Response(JSON.stringify({ data: {} }), { status: 200 }),
+  );
   vi.stubGlobal("fetch", fetchMock);
   return fetchMock;
 };

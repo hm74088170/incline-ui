@@ -26,3 +26,6 @@ export async function apiFetch<T>(input: string, init?: RequestInit): Promise<T>
   }
   return body as T;
 }
+export function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : "Something went wrong";
+}

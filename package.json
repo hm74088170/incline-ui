@@ -19,7 +19,8 @@
     "test:unit:frontend": "vitest run --project unit-frontend",
     "test:unit:backend": "vitest run --project unit-backend",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.106.1",
