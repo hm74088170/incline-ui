@@ -96,6 +96,9 @@ export function AdminGate({ children }: { children: ReactNode }) {
           <Link href="/admin/categories" className="rounded-md px-2.5 py-1.5 hover:bg-hover">
             Categories
           </Link>
+          <Link href="/admin/icons" className="rounded-md px-2.5 py-1.5 hover:bg-hover">
+            Icons
+          </Link>
         </nav>
         <div className="ml-auto flex items-center gap-3 text-sm">
           <Link href="/" className="text-subtle hover:text-ink">
